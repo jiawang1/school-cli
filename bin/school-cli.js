@@ -97,12 +97,12 @@ program
           })
           .catch(err => {
             spinner.fail('generate project failed');
-            throw err;
+            util.error(err);
+            util.deleteFolder(target);
           });
       })
       .catch(err => {
         util.error(err);
-        util.error(err.stack || err.message || '');
         util.deleteFolder(target);
       });
   });
