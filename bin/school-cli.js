@@ -6,6 +6,7 @@ const util = require('../lib/utils');
 const ora = require('ora');
 const fs = require('fs');
 const path = require('path');
+const { STATE_MANAGEMENT } = require('../lib/const');
 
 program.version(require('../package.json').version).usage('<command> [project name]');
 
@@ -31,9 +32,9 @@ program
           type: 'list',
           choices: [
             {
-              name: 'phoenix application',
+              name: 'web application project',
               value: 1,
-              short: 'phoenix application'
+              short: 'web application project'
             },
             { name: 'component project', value: 2, short: 'component project' }
           ]
@@ -74,6 +75,11 @@ program
         console.log(answers);
         util.log('');
 
+        if(answers.stateManagement === STATE_MANAGEMENT.apollo){
+          util.error('apollo is not support yet');
+          process.exit(1);
+        }
+
         if (files.length === 0 && path.basename(currentPath) === name) {
           target = currentPath;
         } else {
@@ -99,11 +105,13 @@ program
             spinner.fail('generate project failed');
             util.error(err);
             util.deleteFolder(target);
+            process.exit(1);
           });
       })
       .catch(err => {
         util.error(err);
         util.deleteFolder(target);
+        process.exit(1);
       });
   });
 
