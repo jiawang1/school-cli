@@ -1,0 +1,31 @@
+{
+  "name": "school-cli",
+  "version": "1.1.0",
+  "description": "boilerplate for school projects",
+  "bin": {
+    "school-cli": "./bin/school-cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "cli-eslint": "0.0.2",
+    "commander": "^2.16.0",
+    "download-git-repo": "^1.0.2",
+    "ejs": "^2.6.1",
+    "html-webpack-plugin": "^3.2.0",
+    "inquirer": "^6.0.0",
+    "ora": "^3.0.0",
+    "semver": "^5.5.0",
+    "webpack": "^4.16.5",
+    "webpack-chain": "^4.9.0"
+  },
+  "files": [
+    "/bin/**",
+    "/lib/**",
+    "package.json"
+  ]
+}

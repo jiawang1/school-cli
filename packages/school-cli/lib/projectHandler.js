@@ -7,6 +7,11 @@ const { PROJECT_TYPE, COMPONENT_TEMPLATE } = require('./const');
 const RegTemplate = /(.*)template(.*)/;
 
 class Handler {
+  constructor(appDir, results){
+    this.baseDir = appDir;
+    this.results = results;
+  }
+
   download(target) {
     return new Promise((res, rej) => {
       dgr(this.gitAddress, target, err => {
@@ -33,11 +38,18 @@ class Handler {
       })
     );
   }
+  getProjectPkg(){
+    return JSON.parse(fs.readFileSync(path.join(this.baseDir, 'package.json')));
+  }
+  finalizeProject(pkg, config){
+    fs.writeFileSync(path.join(this.baseDir, 'package.json'), JSON.stringify(pkg), { encoding: 'utf8' });
+    config.finalizeFile(path.join(this.baseDir, '/config'));
+  }
 }
 
 class ApplicationHandler extends Handler {
-  constructor() {
-    super();
+  constructor(...args) {
+    super(...args);
     this.fileList = ['package.json', 'README.md'];
     this.gitAddress = 'jiawang1/template';
   }
@@ -47,11 +59,14 @@ class ApplicationHandler extends Handler {
     });
     super.generate(data, this.fileList);
   }
+  finalizeProject(...args){
+    super.finalizeProject(...args);
+  }
 }
 
 class ComponentHandler extends Handler {
-  constructor() {
-    super();
+  constructor(...args) {
+    super(...args);
     this.fileList = ['package.json', 'README.md'];
     this.gitAddress = 'jiawang1/template-component';
   }
@@ -118,16 +133,16 @@ class ComponentHandler extends Handler {
       }
     });
   }
+  finalizeProject(pkg, config){
+
+  }
 }
 
-const applicationHanlder = new ApplicationHandler();
-const componentHandler = new ComponentHandler();
-
-const getHandler = templateType => {
+const getHandler = (templateType,appDir,results) => {
   if (templateType === PROJECT_TYPE.application) {
-    return applicationHanlder;
+    return new ApplicationHandler(appDir,results);;
   } else {
-    return componentHandler;
+    return new ComponentHandler(appDir,results);;
   }
 };
 
