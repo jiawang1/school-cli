@@ -20,22 +20,22 @@ const init = webpackconfig => {
   const imports = [];
   config
     .mode('development')
-    .context('./src')
-    .entry('app')
-    .add('./src/main.js')
-    .end()
-    .output.path('/out')
+    .context("<<<`${process.cwd()}/src`>>>")
+    .output.path("<<<`${process.cwd()}/_out`>>>")
     .filename('[name].js')
     .publicPath('/');
 
   config.module
-    .rule('svg')
-    .test(/\.(svg)(\?.*)?$/)
-    .use('file-loader')
-    .loader('file-loader')
-    .options({
-      name: genAssetSubPath('img')
-    });
+    .rule('jsx')
+    .test(/\.jsx?$/)
+    .exclude.add(/node_modules/)
+    .end()
+    .use('babel-loader').loader('babel-loader');
+
+  const cssRule = config.module.rule('css').test(/\.css$/);
+
+  cssRule.use('style-loader').loader('style-loader');
+  cssRule.use('css-loader').loader('css-loader');
 
   config.module
     .rule('fonts')
@@ -48,27 +48,28 @@ const init = webpackconfig => {
     });
 
   config.module
-    .rule('fonts')
-    .test(/\.(woff2?|eot|ttf|otf)(\?.*)?$/i)
+    .rule('images')
+    .test(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/)
     .use('url-loader')
     .loader('url-loader')
     .options({
       limit: inlineLimit,
-      name: getAssetPath('fonts')
+      name: genAssetSubPath('img')
     });
 
   config.devtool('inline-source-map');
   config.cache(true);
 
   config.devServer
-    .contentBase()
-    .allowedHosts(['localhost'])
+    .contentBase("<<<`${process.cwd()}/src`>>>")
     .hot(true)
     .noInfo(false)
-    .publicPath()
+    .publicPath('/')
     .filename('index.html');
 
-  imports.push({ packageName: 'webpack', name: 'webpack' });
+  config.devServer.allowedHosts.add('localhost');
+
+  imports.push({ packageName: 'webpack', spreadNames:['HotModuleReplacementPlugin','DefinePlugin']});
   imports.push({ packageName: 'html-webpack-plugin' });
   config.plugin('hmr').use(require('webpack/lib/HotModuleReplacementPlugin'));
 
@@ -77,7 +78,7 @@ const init = webpackconfig => {
     {
       inject: true,
       fileName: 'index.html',
-      template: `./index.ejs`
+      template: `${process.cwd()}/public/index.ejs`
     }
   ]);
 

@@ -133,8 +133,8 @@ class ComponentHandler extends Handler {
       }
     });
   }
-  finalizeProject(pkg, config){
-
+  finalizeProject(...args){
+    super.finalizeProject(...args);
   }
 }
 

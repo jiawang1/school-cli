@@ -19,11 +19,31 @@ class WebpackConfig {
     this.imports = [...this.imports, ...imports];
   }
 
+  cleanPlaceholder(str){
+    return str.replace(/.<<<|>>>./g , "");
+  }
   __transformImports() {
     return this.imports.map(
-      ipt =>
-        `const ${ipt.name ? ipt.name : this.__resolveName(ipt.packageName)} = require('${ipt.packageName}')`
-    ).join('\n\r').concat('\n\r');
+      ipt =>{
+        let __import = null;
+        let spreadName = null;
+        if(ipt.spreadNames){
+          spreadName = `{${ipt.spreadNames.join(',')}}`;
+        }
+
+       if(ipt.name){
+        __import = ipt.name;
+        if(spreadName){
+          __import = `${__import}, ${spreadName}`;
+        }
+       }else{
+          __import = spreadName;
+       }
+       if(__import){
+         return `const ${__import} = require('${ipt.packageName}')`;
+       }
+       return `const ${this.__resolveName(ipt.packageName)} = require('${ipt.packageName}')`;
+      }).join('\n\r').concat('\n\r');
   }
   __resolveName(packageName) {
     const plugin = require(packageName);
@@ -31,7 +51,7 @@ class WebpackConfig {
   }
   finalizeFile(dir) {
     const __imports = this.__transformImports();
-    const __config = Config.toString(this.config.toConfig(), { verbose: true });
+    const __config = this.cleanPlaceholder(Config.toString(this.config.toConfig(), { verbose: true }));
     const __path = path.join(dir, 'webpack.dev.config.js');
     fs.writeFileSync(__path, `${__imports} module.exports = ${__config}`, 'utf8');
   }
