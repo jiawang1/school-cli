@@ -1,4 +1,8 @@
 const path = require('path');
+const util = require('util');
+const exec = require('child_process').exec;
+const execPromise = util.promisify(exec);
+const projectUtil = require('./utils');
 
 function getAssetPath(options, filePath, placeAtRootIfRelative) {
     // if the user is using a relative URL, place js & css at dist root to ensure
@@ -14,8 +18,11 @@ const genAssetSubPath = dir => {
 };
 
 const inlineLimit = 4096;
+const dependencies = ['webpack', 'html-webpack-plugin'];
 
-const init = webpackconfig => {
+const init = async webpackconfig => {
+
+    await execPromise(`npm install ${dependencies.join(' ')}`);
     const config = webpackconfig.getConfig();
     const imports = [];
     config
@@ -71,16 +78,16 @@ const init = webpackconfig => {
 
     imports.push({ packageName: 'webpack', spreadNames: ['HotModuleReplacementPlugin', 'DefinePlugin'] });
     imports.push({ packageName: 'html-webpack-plugin' });
-    config.plugin('hmr').use(require('webpack/lib/HotModuleReplacementPlugin'));
+    config.plugin('hmr').use(projectUtil.load('webpack/lib/HotModuleReplacementPlugin', process.cwd()));
 
-    const HTMLPlugin = require('html-webpack-plugin');
+    const HTMLPlugin = projectUtil.load('html-webpack-plugin', process.cwd());
     config.plugin('html').use(HTMLPlugin, [{
         inject: true,
         fileName: 'index.html',
         template: "<<<`${process.cwd()}/public/index.ejs`>>>"
     }]);
 
-    config.plugin('define').use(require('webpack/lib/DefinePlugin'), [{
+    config.plugin('define').use(projectUtil.load('webpack/lib/DefinePlugin', process.cwd()), [{
         'process.env': {
             NODE_ENV: "'development'"
         }

@@ -123,7 +123,7 @@ program
             await projectHandler.installPlugins();
 
             spinner.text = 'enhance project by plugins';
-            projectHandler.runPlugins();
+            await projectHandler.runPlugins();
             projectHandler.finalizeProject();
         } catch (err) {
             spinner.fail('generate project failed');

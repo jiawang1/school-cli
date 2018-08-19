@@ -4,13 +4,13 @@ const path = require('path');
 const semver = require('semver');
 const validateNpmProjectName = require('validate-npm-package-name')
 
-const resilveFrom = (_module, fromDir) => {
+const resolveFrom = (_module, fromDir) => {
     const Module = require('module');
     return Module._findPath(_module, [path.join(fromDir, '/node_modules')], false);
 };
 
 const load = (_module, fromDir) => {
-    const filename = resilveFrom(_module, fromDir);
+    const filename = resolveFrom(_module, fromDir);
     return require(filename);
 };
 

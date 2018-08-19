@@ -63,7 +63,8 @@ class ProjectHandler {
         return execPromise(`npm install ${command}`);
     }
 
-    runPlugins() {
+    async runPlugins() {
+        await this.webpackConfig.init();
         this.plugins.map(plugin => {
             const PluginClass = projectUtil.load(plugin, process.cwd());
             const oPlugin = new PluginClass(this.baseDir, this.results);
