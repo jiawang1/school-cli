@@ -112,32 +112,32 @@ program
         const projectHandler = getHandler(results.type, target, results);
 
         const spinner = ora('Downloading project').start();
-        await projectHandler.download();
+        try {
+            await projectHandler.download();
 
-        spinner.text = 'transforming project template';
-        await projectHandler.parseTemplate();
+            spinner.text = 'transforming project template';
+            await projectHandler.parseTemplate();
 
-        process.chdir(target);
-        spinner.text = 'start to download plugins';
-        await projectHandler.installPlugins();
+            process.chdir(target);
+            spinner.text = 'start to download plugins';
+            await projectHandler.installPlugins();
 
-        spinner.text = 'enhance project by plugins';
-        projectHandler.runPlugins();
-
-        projectHandler.finalizeProject();
-
+            spinner.text = 'enhance project by plugins';
+            projectHandler.runPlugins();
+            projectHandler.finalizeProject();
+        } catch (err) {
+            spinner.fail('generate project failed');
+            utils.error(err);
+            utils.error(err && err.stack);
+            const upper = target.replace(path.basename(target), '');
+            process.chdir(upper);
+            utils.deleteFolder(target);
+            process.exit(1);
+        }
         spinner.succeed();
         utils.log(`project ${name} generated successfully, you can follow steps below to run project:`);
         utils.log(`1. enter folder ${name} and execute npm install`);
         utils.log(`2. execute npm start`);
-
     });
-// .catch(err => {
-//   spinner.fail('generate project failed');
-//   utils.error(err);
-//   utils.error(err && err.stack);
-//   utils.deleteFolder(target);
-//   process.exit(1);
-// });
 
 program.parse(process.argv);

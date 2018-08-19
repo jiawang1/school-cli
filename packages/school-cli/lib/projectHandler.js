@@ -76,11 +76,17 @@ class ProjectHandler {
     getProjectPkg() {
         return JSON.parse(fs.readFileSync(path.join(this.baseDir, 'package.json')));
     }
+
+    __clearWorkFolder() {
+        projectUtil.deleteFolder(path.join(this.baseDir, '/node_modules'));
+        fs.unlinkSync(path.join(this.baseDir, 'package-lock.json'))
+    }
     finalizeProject() {
         fs.writeFileSync(path.join(this.baseDir, 'package.json'), JSON.stringify(this.pkg), {
             encoding: 'utf8'
         });
         this.webpackConfig.finalizeFile(path.join(this.baseDir, '/config'));
+        this.__clearWorkFolder();
     }
 }
 
