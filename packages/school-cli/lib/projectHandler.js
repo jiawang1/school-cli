@@ -2,8 +2,12 @@ const ejs = require('ejs');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
+const projectUtil = require('./utils');
+const exec = require('child_process').exec;
 const execPromise = util.promisify(exec);
 const dgr = require('download-git-repo');
+const WebpackConfig = require('./WebpackConfig');
+
 const {
     PROJECT_TYPE,
     COMPONENT_TEMPLATE
@@ -13,13 +17,15 @@ const RegTemplate = /(.*)template(.*)/;
 
 /**
  * used to construct project.
- * download -> parseTemplate
+ * download -> parseTemplate -> installPlugins -> runPlugins -> finalizeProject
  */
 class ProjectHandler {
-    constructor(appDir, results, plugins) {
+    constructor(appDir, results, plugins = []) {
         this.baseDir = appDir;
         this.results = results;
         this.plugins = plugins;
+        this.webpackConfig = new WebpackConfig(results);
+        this.pkg = null;
     }
 
     download() {
@@ -42,39 +48,55 @@ class ProjectHandler {
                             rej(err);
                         }
                         fs.writeFileSync(file, str);
-                        res();
+                        res(file);
                     });
                 });
             })
-        );
+        ).then((...args) => {
+            this.pkg = JSON.parse(fs.readFileSync(path.join(this.baseDir, 'package.json')));
+            return args;
+        });
     }
 
     installPlugins() {
-        return execPromise(`npm install ${this.plugins.join(' ')}`);
+        const command = this.plugins.join(' ');
+        return execPromise(`npm install ${command}`);
+    }
+
+    runPlugins() {
+        this.plugins.map(plugin => {
+            const PluginClass = projectUtil.load(plugin, process.cwd());
+            const oPlugin = new PluginClass(this.baseDir, this.results);
+            oPlugin.renderTemplate();
+            oPlugin.configurePackage(this.pkg);
+            oPlugin.configureCompileInfo(this.webpackConfig);
+        });
     }
 
     getProjectPkg() {
         return JSON.parse(fs.readFileSync(path.join(this.baseDir, 'package.json')));
     }
-    finalizeProject(pkg, config) {
-        fs.writeFileSync(path.join(this.baseDir, 'package.json'), JSON.stringify(pkg), {
+    finalizeProject() {
+        fs.writeFileSync(path.join(this.baseDir, 'package.json'), JSON.stringify(this.pkg), {
             encoding: 'utf8'
         });
-        config.finalizeFile(path.join(this.baseDir, '/config'));
+        this.webpackConfig.finalizeFile(path.join(this.baseDir, '/config'));
     }
 }
 
 class ApplicationHandler extends ProjectHandler {
-    constructor(...args) {
-        super(...args);
+    constructor(appDir, results, plugins = []) {
+        const projectPlugins = ['cli-eslint', ...plugins];
+        super(appDir, results, projectPlugins);
         this.fileList = ['package.json', 'README.md'];
         this.gitAddress = 'jiawang1/template';
+
     }
     parseTemplate() {
         this.fileList = this.fileList.map(file => {
-            return path.join(this.parseTemplate, file);
+            return path.join(this.baseDir, file);
         });
-        super.parseTemplate();
+        return super.parseTemplate();
     }
 }
 

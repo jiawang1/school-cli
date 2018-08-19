@@ -2,15 +2,11 @@
 
 const program = require('commander');
 const inquirer = require('inquirer');
-const util = require('util');
-const exec = require('child_process').exec;
-const execPromise = util.promisify(exec);
 const getHandler = require('../lib/projectHandler');
 const utils = require('../lib/utils');
 const ora = require('ora');
 const fs = require('fs');
 const path = require('path');
-const WebpackConfig = require('../lib/WebpackConfig');
 const {
     STATE_MANAGEMENT
 } = require('../lib/const');
@@ -113,7 +109,6 @@ program
             target = path.join(currentPath, name);
             fs.mkdirSync(target);
         }
-        const defaultPlugins = ['cli-eslint'];
         const projectHandler = getHandler(results.type, target, results);
 
         const spinner = ora('Downloading project').start();
@@ -121,23 +116,15 @@ program
 
         spinner.text = 'transforming project template';
         await projectHandler.parseTemplate();
+
         process.chdir(target);
         spinner.text = 'start to download plugins';
-        await execPromise(`npm install ${defaultPlugins.join(' ')}`);
+        await projectHandler.installPlugins();
 
-        let pkg = projectHandler.getProjectPkg();
-        const webpackConfig = new WebpackConfig();
+        spinner.text = 'enhance project by plugins';
+        projectHandler.runPlugins();
 
-        defaultPlugins.map(plugin => {
-            const PluginClass = utils.load(plugin, process.cwd());
-            const oPlugin = new PluginClass(target, results);
-            oPlugin.renderTemplate();
-            oPlugin.configurePackage(pkg);
-            oPlugin.configureCompileInfo(webpackConfig);
-        });
-
-        projectHandler.finalizeProject(pkg, webpackConfig);
-
+        projectHandler.finalizeProject();
 
         spinner.succeed();
         utils.log(`project ${name} generated successfully, you can follow steps below to run project:`);
