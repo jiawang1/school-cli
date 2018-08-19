@@ -92,7 +92,7 @@ class ProjectHandler {
 
 class ApplicationHandler extends ProjectHandler {
     constructor(appDir, results, plugins = []) {
-        const projectPlugins = ['cli-eslint', ...plugins];
+        const projectPlugins = ['cli-plugin-eslint', ...plugins];
         super(appDir, results, projectPlugins);
         this.fileList = ['package.json', 'README.md'];
         this.gitAddress = 'jiawang1/template';

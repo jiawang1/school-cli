@@ -12,7 +12,7 @@
     "license": "MIT",
     "dependencies": {
         "chalk": "^2.4.1",
-        "cli-eslint": "0.0.2",
+        "cli-plugin-eslint": "0.0.2",
         "commander": "^2.16.0",
         "download-git-repo": "^1.0.2",
         "ejs": "^2.6.1",
