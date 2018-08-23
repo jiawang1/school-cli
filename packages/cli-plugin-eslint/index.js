@@ -35,7 +35,6 @@ class EslintHandler {
     );
   }
   configurePackage(pkg) {
-
     const _pkg = {
       dependencies: {
         "babel-eslint": "7.2.3",
